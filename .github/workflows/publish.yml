@@ -1,0 +1,56 @@
+name: Publish
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-release:
+    name: Build on Windows and publish release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install PS2EXE (for current user)
+        shell: pwsh
+        run: |
+          Install-Module -Name PS2EXE -Force -Scope CurrentUser -Repository PSGallery -AllowClobber
+
+      - name: Compile start.ps1
+        shell: pwsh
+        run: |
+          # Affiche la version de PowerShell
+          Write-Host "Running on: $($PSVersionTable.PSVersion)"
+          # Lance le script de compilation fourni dans le repo
+          .\compile.ps1
+
+      - name: Verify artifact
+        shell: pwsh
+        run: |
+          if (-Not (Test-Path -Path ./start.exe)) {
+            Write-Error "start.exe not found after compilation"
+            exit 1
+          }
+          Write-Host "start.exe generated"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          draft: false
+          prerelease: false
+
+      - name: Upload start.exe to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./start.exe
+          asset_name: start.exe
+          asset_content_type: application/octet-stream
