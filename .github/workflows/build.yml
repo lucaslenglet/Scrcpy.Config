@@ -1,7 +1,7 @@
-name: Publish
+name: Build
 
 on:
-  push:
+  pull_request:
     branches: [ main ]
 
 jobs:
@@ -33,24 +33,3 @@ jobs:
             exit 1
           }
           Write-Host "start-tray.exe generated"
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
-          draft: false
-          prerelease: false
-
-      - name: Upload start-tray.exe to release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./start-tray.exe
-          asset_name: start-tray.exe
-          asset_content_type: application/octet-stream
