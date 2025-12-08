@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-release:
-    name: Build on Windows and publish release
+    name: Build on Windows
     runs-on: windows-latest
     steps:
       - name: Checkout repository

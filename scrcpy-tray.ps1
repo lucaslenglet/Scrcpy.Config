@@ -106,9 +106,13 @@ $iconBaseOff64 = 'AAABAAEAICAAAAEAIACoEAAAFgAAACgAAAAgAAAAQAAAAAEAIAAAAAAAABAAAC
 
 function Update-TrayStatus {
     $icon = $iconBaseOff64
+    $text = "Scrcpy Audio Bride (arrêté)"
     if ($global:scrcpyProcess -and !$global:scrcpyProcess.HasExited) {
         $icon = $iconBaseOn64
+        $text = "Scrcpy Audio Bride (démarré)"
     }
+    
+    $notifyIcon.Text = $text
 
     try {
         $iconBytes = [Convert]::FromBase64String($icon)
