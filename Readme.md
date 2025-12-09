@@ -34,6 +34,7 @@ winget install --exact Genymobile.scrcpy
 - Menu contextuel pour démarrer/arrêter le bridge, changer le mode USB/IP, ouvrir le dossier de config, quitter
 - Le fichier de config (`scrcpy-config.json`) permet de personnaliser le mode et l’IP
 - Le README local (`scrcpy-config.README.md`) explique les options
+- Déposer l'exécutable ou un raccourci vers celui-ci dans le dossier `shell:startup` pour lancer le programme au démarrage de windows
 
 ## Notes rapides
 - Pas besoin de fichier icône externe, tout est embarqué
