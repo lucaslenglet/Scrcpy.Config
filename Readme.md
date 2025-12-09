@@ -1,6 +1,6 @@
 # Scrcpy.Config — Audio bridge pour Android → PC 🔊➡️🖥️
 
-Application PowerShell avec systray qui permet de router l’audio d’un appareil Android vers le PC via `scrcpy`, avec configuration dynamique et contrôle complet depuis l’icône système.
+Application PowerShell avec systray qui permet de router l’audio d’un appareil Android vers un PC Windows via `scrcpy`, avec configuration dynamique et contrôle complet depuis l’icône système.
 
 ## Fonctionnalités principales
 - **Bridge audio Android → PC** via scrcpy
