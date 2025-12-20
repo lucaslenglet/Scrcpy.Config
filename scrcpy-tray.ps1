@@ -56,7 +56,7 @@ function Get-ScrcpyArgs {
     } catch {
         # Si erreur de parsing, fallback USB
     }
-    return "--no-window -w --audio-buffer=50"
+    return "--no-window -w --audio-buffer=50 --select-usb"
 }
 
 $scrcpyProcess = $null
