@@ -3,10 +3,19 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
+function Write-Log {
+    param($message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logMessage = "[$timestamp] $message"
+    $logMessage | Out-File -FilePath $logPath -Encoding UTF8 -Append
+}
+
 # Dossier et fichiers de config
 $configDir = Join-Path $env:APPDATA "ScrcpyAudioBridge"
 $configPath = Join-Path $configDir "scrcpy-config.json"
 $readmePath = Join-Path $configDir "scrcpy-config.README.md"
+$logPath = Join-Path $configDir "scrcpy-tray.log"
+$scrcpyProcess = $null
 
 # Création du dossier et des fichiers si besoin
 if (-not (Test-Path $configDir)) {
@@ -43,6 +52,19 @@ if (-not (Test-Path $readmePath)) {
     $readmeContent | Out-File -FilePath $readmePath -Encoding UTF8 -Force
 }
 
+# Vérifier s'il y a déjà des processus scrcpy en cours au démarrage
+try {
+    $runningProcesses = Get-Process -Name "scrcpy" -ErrorAction SilentlyContinue
+    if ($runningProcesses) {
+        $scrcpyProcess = $runningProcesses[0] # Suivre le premier processus trouvé
+        Write-Log "Processus scrcpy existant détecté au démarrage"
+    }
+} catch {
+    # Ignorer les erreurs
+}
+
+Write-Log "Application démarrée"
+
 function Get-Config {
     return Get-Content $configPath | ConvertFrom-Json
 }
@@ -59,8 +81,6 @@ function Get-ScrcpyArgs {
     return "--no-window -w --audio-buffer=50 --select-usb"
 }
 
-$scrcpyProcess = $null
-
 function Start-Bridge {
     if ($scrcpyProcess -and !$scrcpyProcess.HasExited) {
         [System.Windows.Forms.MessageBox]::Show("Le bridge est déjà actif.", "Info")
@@ -70,13 +90,29 @@ function Start-Bridge {
     $scrcpyProcess = Start-Process "scrcpy" -ArgumentList $scrcpyArgs -PassThru -WindowStyle Hidden
     Start-Sleep -Milliseconds 300
     Update-TrayStatus
+    Write-Log "Bridge démarré avec les arguments: $scrcpyArgs"
 }
 
 function Stop-Bridge {
+    # Stop the tracked process if it exists
     if ($scrcpyProcess -and !$scrcpyProcess.HasExited) {
         $scrcpyProcess | Stop-Process -Force
         $scrcpyProcess = $null
+        Write-Log "Bridge arrêté (processus suivi)"
     }
+
+    # Also kill any other scrcpy processes that might be running
+    # This ensures we stop scrcpy even if it wasn't started by this script
+    try {
+        $runningProcesses = Get-Process -Name "scrcpy" -ErrorAction SilentlyContinue
+        if ($runningProcesses) {
+            $runningProcesses | Stop-Process -Force
+            Write-Log "Bridge arrêté (processus supplémentaires trouvés et arrêtés)"
+        }
+    } catch {
+        # Ignore errors if no scrcpy processes are found
+    }
+
     Update-TrayStatus
 }
 
@@ -88,6 +124,8 @@ function Set-Mode {
         $config.ip = "192.168.1.178:41393" # Valeur par défaut, à éditer dans le JSON
     }
     $config | ConvertTo-Json | Out-File -FilePath $configPath -Encoding UTF8 -Force
+    Update-TrayStatus
+    Write-Log "Mode changé vers: $mode"
     if ($scrcpyProcess -and !$scrcpyProcess.HasExited) {
         Stop-Bridge
         Start-Bridge
@@ -96,6 +134,14 @@ function Set-Mode {
 
 function Open-ConfigFolder {
     Start-Process explorer.exe $configDir
+}
+
+function Open-LogFile {
+    if (Test-Path $logPath) {
+        Start-Process notepad.exe -ArgumentList $logPath
+    } else {
+        [System.Windows.Forms.MessageBox]::Show("Aucun fichier de log n'existe encore.", "Info")
+    }
 }
 
 # Icône tray embarquée (Base64)
@@ -152,6 +198,9 @@ $contextMenu.Items.Add([System.Windows.Forms.ToolStripSeparator]::new()) | Out-N
 
 $configItem = $contextMenu.Items.Add("Ouvrir le dossier de config")
 $configItem.Add_Click({ Open-ConfigFolder })
+
+$logItem = $contextMenu.Items.Add("Ouvrir le fichier de log")
+$logItem.Add_Click({ Open-LogFile })
 
 $contextMenu.Items.Add([System.Windows.Forms.ToolStripSeparator]::new()) | Out-Null
 
