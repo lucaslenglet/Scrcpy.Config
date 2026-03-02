@@ -2,36 +2,23 @@ name: Build
 
 on:
   pull_request:
-    branches: [ main ]
-    paths-ignore:
-      - '**/Readme.md'
+    branches:
+      - main
+    paths:
+      - src/**/*
+      - cake.cs
+      - ScrcpyConfig.slnx
 
 jobs:
-  build-and-release:
-    name: Build on Windows
+  build:
     runs-on: windows-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Install PS2EXE (for current user)
-        shell: pwsh
-        run: |
-          Install-Module -Name PS2EXE -Force -Scope CurrentUser -Repository PSGallery -AllowClobber
-
-      - name: Compile scrcpy-tray.ps1
-        shell: pwsh
-        run: |
-          # Affiche la version de PowerShell
-          Write-Host "Running on: $($PSVersionTable.PSVersion)"
-          # Lance le script de compilation fourni dans le repo
-          .\compile-tray.ps1
-
-      - name: Verify artifact
-        shell: pwsh
-        run: |
-          if (-Not (Test-Path -Path ./start-tray.exe)) {
-            Write-Error "start-tray.exe not found after compilation"
-            exit 1
-          }
-          Write-Host "start-tray.exe generated"
+        with:
+          fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
+      - name: Run a Cake C# file
+        uses: cake-build/cake-action@v3
+        with:
+          file-path: cake.cs
+          target: Build
