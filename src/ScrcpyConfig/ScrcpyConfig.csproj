@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
+    <PackageId>lucaslgt.ScrcpyConfig</PackageId>
+    <Authors>LENGLET Lucas</Authors>
+    <Description>Windows system tray application to manage scrcpy audio bridge from Android to Windows.</Description>
+    <PackageTags>scrcpy;android;audio;tray;windows</PackageTags>
+    <PackageProjectUrl>https://github.com/lucaslenglet/Scrcpy.Config</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/lucaslenglet/Scrcpy.Config</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <ToolCommandName>scrcpy-config</ToolCommandName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\icon_on32.ico" />
+    <EmbeddedResource Include="Resources\icon_off32.ico" />
+  </ItemGroup>
+
+</Project>
