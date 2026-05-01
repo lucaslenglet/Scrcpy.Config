@@ -7,6 +7,8 @@ on:
 jobs:
   publish:
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -15,8 +17,7 @@ jobs:
       - name: Run a Cake C# file
         uses: cake-build/cake-action@v3
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-          NUGET_SOURCE_URL: ${{ secrets.NUGET_SOURCE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           file-path: cake.cs
-          target: PackAndPush
+          target: Publish

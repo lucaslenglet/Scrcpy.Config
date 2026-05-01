@@ -1,5 +1,6 @@
-#:sdk Cake.Sdk@6.0.0
+#:sdk Cake.Sdk@6.1.0
 #:package Cake.GitVersioning@3.9.50
+#:package Cake.GitHub@1.0.0
 
 var target = Argument("target", "Build");
 var configuration = Argument("configuration", "Release");
@@ -10,10 +11,10 @@ var staging = Argument("staging", "./stg");
 //////////////////////////////////////////////////////////////////////
 
 Task("SetBuildVersion")
-    .WithCriteria(!BuildSystem.IsLocalBuild && target == "PackAndPush")
+    .WithCriteria(!BuildSystem.IsLocalBuild && target == "Publish")
     .Does(() =>
     {
-        GitVersioningCloud(".", new GitVersioningCloudSettings
+        GitVersioningCloud("./src/ScrcpyConfig/ScrcpyConfig.csproj", new GitVersioningCloudSettings
         {
             CloudBuildNumber = true,
         });
@@ -35,12 +36,12 @@ Task("Build")
         });
     });
 
-Task("PackAndPush")
+Task("Publish")
     .IsDependentOn("SetBuildVersion")
     .IsDependentOn("Build")
-    .Does(() =>
+    .Does(async () =>
     {
-        DotNetPack("./src/ScrcpyConfig/ScrcpyConfig.csproj", new DotNetPackSettings
+        DotNetPublish("./src/ScrcpyConfig/ScrcpyConfig.csproj", new DotNetPublishSettings
         {
             NoRestore = true,
             NoBuild = true,
@@ -48,14 +49,28 @@ Task("PackAndPush")
             OutputDirectory = staging,
         });
 
-        foreach (var nuget in GetFiles($"{staging}/*.nupkg"))
+        var version = GitVersioningGetVersion(".").SemVer2;
+        var tag = $"v{version}";
+        var exe = $"{staging}/ScrcpyConfig.exe";
+        var token = EnvironmentVariable("GITHUB_TOKEN");
+
+        await GitHubCreateReleaseAsync(
+            userName: null,
+            apiToken: token,
+            owner: "lucaslenglet",
+            repository: "Scrcpy.Config",
+            tagName: tag,
+            settings: new GitHubCreateReleaseSettings { Name = tag }
+        );
+
+        StartProcess("gh", new ProcessSettings
         {
-            DotNetNuGetPush(nuget, new DotNetNuGetPushSettings
+            Arguments = $"release upload {tag} {exe}",
+            EnvironmentVariables = new Dictionary<string, string>
             {
-                ApiKey = EnvironmentVariable("NUGET_API_KEY"),
-                Source = EnvironmentVariable("NUGET_SOURCE_URL"),
-            });
-        }
+                { "GH_TOKEN", token }
+            }
+        });
     });
 
 //////////////////////////////////////////////////////////////////////

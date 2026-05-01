@@ -1,6 +1,6 @@
 # Scrcpy.Config — Android Audio Bridge for Windows
 
-A .NET 10 WinForms system tray application that routes audio from an Android device to a Windows PC via [`scrcpy`](https://github.com/Genymobile/scrcpy). Distributed as a global .NET tool (`lucaslgt.ScrcpyConfig`), it runs silently in the background and is fully controlled from the system tray icon — no terminal needed after installation.
+A .NET 10 WinForms system tray application that routes audio from an Android device to a Windows PC via [`scrcpy`](https://github.com/Genymobile/scrcpy). Distributed as a self-contained Windows executable via GitHub Releases, it runs silently in the background and is fully controlled from the system tray icon — no terminal needed after installation.
 
 > The application UI is in French.
 
@@ -41,11 +41,11 @@ A .NET 10 WinForms system tray application that routes audio from an Android dev
 | Language | C# 13 |
 | Framework | .NET 10 (Windows) |
 | UI toolkit | WinForms (`System.Windows.Forms`) |
-| Distribution | .NET global tool (`dotnet tool install -g`) |
+| Distribution | GitHub Releases (self-contained `.exe`) |
 | Versioning | Nerdbank.GitVersioning 3.9.50 |
 | Build automation | Cake (C# scripting, `Cake.Sdk` 6.0.0) |
 | CI/CD | GitHub Actions (windows-latest) |
-| Package registry | NuGet.org |
+| Package registry | GitHub Releases |
 
 ---
 
@@ -53,9 +53,8 @@ A .NET 10 WinForms system tray application that routes audio from an Android dev
 
 Before installing or developing this project, you need:
 
-1. **.NET 10 SDK or Runtime**
-   - SDK required for development and `dotnet tool install`
-   - Runtime alone is sufficient to run a pre-installed tool
+1. **.NET 10 SDK** (development only)
+   - Required only if building from source; the distributed `.exe` is self-contained and needs no runtime installed
    - Download: https://dotnet.microsoft.com/download/dotnet/10.0
 
 2. **scrcpy** — the underlying Android mirroring tool that this application wraps
@@ -73,38 +72,21 @@ Before installing or developing this project, you need:
 
 ## Installation
 
-### Install as a Global .NET Tool (recommended)
+### Download the Latest Release (recommended)
 
-```powershell
-dotnet tool install -g lucaslgt.ScrcpyConfig
-```
+1. Go to the [latest GitHub Release](https://github.com/lucaslenglet/Scrcpy.Config/releases/latest)
+2. Download `ScrcpyConfig.exe`
+3. Place it anywhere on your machine (e.g. `C:\Tools\ScrcpyConfig.exe`)
+4. Double-click it to run — look for the new icon in your system tray
 
-This installs the `scrcpy-config` command globally. Launch it:
-
-```powershell
-scrcpy-config
-```
-
-The application starts silently — look for the new icon in your system tray.
-
-### Update to the Latest Version
-
-```powershell
-dotnet tool update -g lucaslgt.ScrcpyConfig
-```
-
-### Uninstall
-
-```powershell
-dotnet tool uninstall -g lucaslgt.ScrcpyConfig
-```
+The executable is self-contained: no .NET runtime or additional dependencies are required.
 
 ### Auto-start with Windows
 
 To launch the bridge automatically when you log in, add a shortcut to the Windows startup folder:
 
 1. Press `Win + R`, type `shell:startup`, press Enter
-2. Create a shortcut pointing to `scrcpy-config` (or copy the `.exe` path from `%USERPROFILE%\.dotnet\tools\`)
+2. Create a shortcut pointing to `ScrcpyConfig.exe`
 
 ---
 
@@ -289,7 +271,7 @@ Scrcpy.Config/
 ├── .github/
 │   └── workflows/
 │       ├── build.yml                 # PR build check
-│       └── publish.yml               # Manual NuGet publish
+│       └── publish.yml               # Manual GitHub Release publish
 ├── cake.cs                           # Cake build script
 ├── Directory.Build.props             # Nerdbank.GitVersioning NuGet ref
 ├── global.json                       # Pins .NET SDK to 10.0.101
@@ -354,26 +336,17 @@ This project uses [Cake](https://cakebuild.net/) via the C# scripting runner (`C
 |---|---|---|
 | `Build` (default) | `dotnet run --project cake.cs` | Restore + build in Release |
 | `Build` (Debug) | `dotnet run --project cake.cs -- --configuration Debug` | Build in Debug configuration |
-| `PackAndPush` | `dotnet run --project cake.cs -- --target PackAndPush` | Pack NuGet and push to registry |
+| `Publish` | `dotnet run --project cake.cs -- --target Publish` | Publish self-contained exe, create GitHub release, and upload the asset |
 
-### PackAndPush Requirements
+### Publish Requirements
 
-The `PackAndPush` target requires two environment variables:
-
-| Variable | Description |
-|---|---|
-| `NUGET_API_KEY` | API key for the target NuGet source |
-| `NUGET_SOURCE_URL` | Full URL of the NuGet push endpoint |
-
-Set them before running:
+The `Publish` target requires a `GITHUB_TOKEN` environment variable with permission to create releases. In CI this is provided automatically. Locally it will fail at the release-creation step — running `dotnet publish` directly is the recommended approach for local builds:
 
 ```powershell
-$env:NUGET_API_KEY = "your-api-key"
-$env:NUGET_SOURCE_URL = "https://api.nuget.org/v3/index.json"
-dotnet run --project cake.cs -- --target PackAndPush
+dotnet publish ./src/ScrcpyConfig/ScrcpyConfig.csproj -c Release -o ./stg
 ```
 
-Packed `.nupkg` files are staged to `./stg/` before being pushed.
+The resulting `ScrcpyConfig.exe` is staged to `./stg/`.
 
 ### Versioning
 
@@ -402,14 +375,12 @@ This serves as the PR gate — merges are blocked until the build passes.
 
 **Steps:**
 1. Checkout with full history
-2. Run `cake.cs` with the `PackAndPush` target, injecting `NUGET_API_KEY` and `NUGET_SOURCE_URL` from repository secrets
+2. Run `cake.cs` with the `Publish` target, which:
+   - Produces a self-contained `ScrcpyConfig.exe` via `dotnet publish`
+   - Creates a GitHub Release tagged with the computed version
+   - Uploads `ScrcpyConfig.exe` as a release asset via the `gh` CLI
 
-**Required secrets** (configured in GitHub repository settings):
-
-| Secret | Description |
-|---|---|
-| `NUGET_API_KEY` | NuGet.org API key with push permission |
-| `NUGET_SOURCE_URL` | NuGet push URL (e.g. `https://api.nuget.org/v3/index.json`) |
+No secrets configuration is required — the workflow uses the built-in `GITHUB_TOKEN`.
 
 To publish a new version:
 1. Merge changes into `main`
@@ -421,8 +392,8 @@ To publish a new version:
 
 ### The tray icon does not appear
 
-- Check Task Manager for `scrcpy-config.exe` — the process may be running but the icon is hidden in the overflow tray. Click the `^` arrow in the taskbar notification area.
-- If the process is not there, run `scrcpy-config` from a terminal to see any startup errors.
+- Check Task Manager for `ScrcpyConfig.exe` — the process may be running but the icon is hidden in the overflow tray. Click the `^` arrow in the taskbar notification area.
+- If the process is not there, run `ScrcpyConfig.exe` from a terminal to see any startup errors.
 
 ### "Le bridge est deja actif" when trying to start
 

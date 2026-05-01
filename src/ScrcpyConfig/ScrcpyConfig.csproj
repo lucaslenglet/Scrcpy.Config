@@ -6,15 +6,15 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackAsTool>true</PackAsTool>
-    <PackageId>lucaslgt.ScrcpyConfig</PackageId>
     <Authors>LENGLET Lucas</Authors>
     <Description>Windows system tray application to manage scrcpy audio bridge from Android to Windows.</Description>
-    <PackageTags>scrcpy;android;audio;tray;windows</PackageTags>
     <PackageProjectUrl>https://github.com/lucaslenglet/Scrcpy.Config</PackageProjectUrl>
     <RepositoryUrl>https://github.com/lucaslenglet/Scrcpy.Config</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <ToolCommandName>scrcpy-config</ToolCommandName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
