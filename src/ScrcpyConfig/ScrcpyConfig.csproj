@@ -11,9 +11,11 @@
     <PackageProjectUrl>https://github.com/lucaslenglet/Scrcpy.Config</PackageProjectUrl>
     <RepositoryUrl>https://github.com/lucaslenglet/Scrcpy.Config</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <ApplicationIcon>Resources\icon_on32.ico</ApplicationIcon>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
