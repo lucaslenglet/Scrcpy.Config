@@ -10,16 +10,6 @@ var staging = Argument("staging", "./stg");
 // TASKS
 //////////////////////////////////////////////////////////////////////
 
-Task("SetBuildVersion")
-    .WithCriteria(!BuildSystem.IsLocalBuild && target == "Publish")
-    .Does(() =>
-    {
-        GitVersioningCloud("./src/ScrcpyConfig/ScrcpyConfig.csproj", new GitVersioningCloudSettings
-        {
-            CloudBuildNumber = true,
-        });
-    });
-
 Task("Restore")
     .Does(() =>
     {
@@ -37,7 +27,6 @@ Task("Build")
     });
 
 Task("Publish")
-    .IsDependentOn("SetBuildVersion")
     .IsDependentOn("Build")
     .Does(async () =>
     {
@@ -55,7 +44,7 @@ Task("Publish")
         var token = EnvironmentVariable("GITHUB_TOKEN");
 
         await GitHubCreateReleaseAsync(
-            userName: null,
+            userName: null!,
             apiToken: token,
             owner: "lucaslenglet",
             repository: "Scrcpy.Config",
